@@ -1,29 +1,32 @@
-# Use an official Node runtime as the parent image
-FROM node:18
+# Use a smaller base image
+FROM node:18-slim
 
-# Install ffmpeg
-RUN apt-get update && apt-get install -y ffmpeg
+# Install ffmpeg and other necessary tools
+RUN apt-get update && \
+    apt-get install -y ffmpeg python3 make g++ --no-install-recommends && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /usr/src/app
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install any needed packages
+# Install dependencies
 RUN npm install
 
-# Copy the current directory contents into the container
+# Copy the rest of the application
 COPY . .
 
-# Make port 3000 available to the world outside this container
+# Create necessary directories
+RUN mkdir -p temp_outputs uploads
+
+# Expose port 3000
 EXPOSE 3000
 
-# Define environment variables
-ENV NODE_ENV production
-ENV PORT 3000
+# Set environment variable
+ENV NODE_ENV=production
 
-# Run the app when the container launches
+# Run the application
 CMD ["node", "server.js"]
-
-# docker run -p 3000:3000 --env-file .env -d ai-ringtone-generator
